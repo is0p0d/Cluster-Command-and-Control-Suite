@@ -1,0 +1,5 @@
+#!/bin/sh
+
+curr_date=`/bin/date +%m/%d/%Y`
+curr_time=`/bin/date +%T`
+/opt/c3-4/cexec "date -s $curr_date; date -s $curr_time"

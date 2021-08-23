@@ -1,0 +1,117 @@
+#!/usr/bin/env python2
+try:
+	import sys, os
+	######### set defaultt c3 path ########################
+        try:
+                def_path = os.environ[ 'C3_PATH' ]
+        except KeyError:
+                def_path = '/opt/c3-4'
+        #######################################################
+
+	sys.path.append( def_path )
+	import c3_com_obj, c3_file_obj, socket, re
+
+	######## constants ####################################
+	help_info = """c3 version 4.0
+	Usage: clist [OPTIONS]
+
+		--help -h	= this screen
+		--file -f       = file containing list of ip's if
+				  one is not supplied then
+				  /etc/c3.conf will be used
+		
+	"""
+	backslash = re.compile( r"\\" )
+
+	filename = "/etc/c3.conf"       #default config file  
+
+	#######################################################
+
+
+	# first create one large string of the command 
+	command_line_list = sys.argv[1:]
+	command_line_string = ''
+	for item in command_line_list:
+		command_line_string = '%s %s' % (command_line_string, item)
+
+	# object used to parse command line
+	c3_command = c3_com_obj.c3_command_line( command_line_string )
+	 
+	# get first option
+	try:
+		file_set = 0
+		option = c3_command.get_opt()
+		while option: # while more options
+			if option == '-h' or option == "--help": # print help info
+				print help_info
+				print "exiting...."
+				sys.exit()
+
+			elif (option == '-f') or (option == '--file'): # alternate config file
+				if not file_set:
+					filename = c3_command.get_opt_string()
+					file_set = 1
+				else:
+					print "only one file name can be specified."
+					sys.exit()
+			
+			else:
+				print "invalid option"
+				sys.exit()
+			option = c3_command.get_opt()
+	except c3_com_obj.end_of_option:
+		pass
+
+        ######### set filename  ##########################
+        if not file_set:
+                try:
+                        filename = os.environ[ 'C3_CONF' ]
+                except KeyError:
+                        filename = '/etc/c3.conf'
+        #######################################################
+
+	######### make cluster list object from file ##########
+	try: # open file & initialize file parser
+		file = c3_file_obj.cluster_def( filename )
+	except IOError:
+		print "error opening file: ", filename
+		sys.exit()
+
+	try:
+		while(1): #throws exception when no more clusters
+			file.get_next_cluster()
+			try:
+				local_ip = socket.gethostbyname( socket.gethostname() )
+			except socket.error:
+				print "Can not resolve local hostname"
+				sys.exit()
+			try:
+				int_ip = socket.gethostbyname( file.get_internal_head_node() )
+			except socket.error:
+				int_ip = ""
+			try:
+				ext_ip = socket.gethostbyname( file.get_external_head_node() )
+			except socket.error:
+				ext_ip = ""
+			except TypeError:
+				ext_ip = int_ip
+
+			if file.get_external_head_node():
+				if ext_ip == local_ip or int_ip == local_ip:
+					print "cluster ", file.get_cluster_name(), " is a direct local cluster"
+				else:
+					print "cluster ", file.get_cluster_name(), " is a direct remote cluster"
+			else:
+				print "cluster ", file.get_cluster_name(), " is an indirect remote cluster"
+			
+			
+	except c3_file_obj.no_more_clusters:
+		pass
+		
+	except c3_file_obj.parse_error, error:
+		print error.description
+		print "somewhere around ", error.last
+		sys.exit()
+except KeyboardInterrupt:
+        print "Keyboard interrupt\n"
+

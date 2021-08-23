@@ -1,0 +1,351 @@
+         C3 version 4.0:   Cluster Command & Control Suite
+           Oak Ridge National Laboratory, Oak Ridge, TN,
+     Authors: M.Brim, R.Flanery, G.A.Geist, B.Luethke, S.L.Scott
+                 (C) 2001 All Rights Reserved
+ 
+                             NOTICE
+
+ Permission to use, copy, modify, and distribute this software and
+ its documentation for any purpose and without fee is hereby granted
+ provided that the above copyright notice appear in all copies and
+ that both the copyright notice and this permission notice appear in
+ supporting documentation.
+ 
+ Neither the Oak Ridge National Laboratory nor the Authors make any
+ representations about the suitability of this software for any
+ purpose.  This software is provided "as is" without express or
+ implied warranty.
+ 
+ The C3 tools were funded by the U.S. Department of Energy.
+
+
+I. REQUIRED SOFTWARE
+--------------------
+
+Before C3 can be installed on a system, you must ensure that the following 
+software is installed on your system. The following seven software packages
+are required:  the C3 tools suite, Rsync, SSH (or OpenSSH), Python, and Perl.
+You must also configure that system to support host name resolution of the 
+machines listed in the configuration file (either through DNS or /etc/hosts).
+ Finally, if you wish to use the C3 pushimage command, which pushes system 
+images across a cluster, you must install SystemImager.
+
+Instructions for obtaining each of these software packages are given below.
+
+  C3 tools may be obtained from http://www.csm.ornl.gov/torc/C3
+
+  Rsync, Perl, SSH, and Python should be included with your distribution.
+  If they are not then download the source or binaries from their respected
+  web sites.
+
+  Perl may be obtained from http://www.perl.com
+	C3 requires 5.005 or greater
+
+  Python may be obtained from 
+  http://www.python.org/
+	C3 version 3 requires Python 2.0 or greater
+
+	additionally C3 requires either the binary or a link to the python 
+	interpreter to 	be in your path (and that it be named python2). To 
+	check it type "python2 -V" and make sure you get output (the current 
+	version of python being run). If you do not get any output then you must 
+	find where the python library is on your machine and create a link to
+	the binary. Such as "ln -s /usr/bin/python /usr/bin/python2" if
+	/usr/bin/python is where your python binary is located and /usr/bin
+	is in your path.
+
+  SystemImager may be obtained from 
+  http://www.systemimager.org/
+
+
+II. C3 INSTALLATION
+----------------
+NOTE: if you are wanting to use the scalable model of the C3 tolls then follow
+steps A and B, read C as it still pertains to the scalable model, then see the 
+README.scale file for the scalable instructions.
+
+A. pre-install
+	Begin by making sure that Rsync, OpenSSL, OpenSSH, PERL, and
+	Python are installed.  Install Systemimager, if needed.  Install DNS
+	or /etc/hosts as needed, and make sure that hostname resolution is 
+	supported.
+
+	Directions for downloading each of these packages are given in 
+	Section	I above.  Perl, Python, Rsync, OpenSSH, and OpenSSL are included 
+	with most distributions
+
+	You will need root access to install these packages on your system. 
+        Follow the instruction in each package if you need to install them.
+
+B. C3 install
+	After you complete the pre-install (step A), install the Cluster 
+	Command & Control (C3) tools. Begin by untar'ring the C3 package 
+	and running the install script.  The install script places the C3 
+	scripts in /opt/c3-4 and the man pages in the appropriate directory.  
+
+	The C3 install script installs the C3 command suite, but does not 
+	configure the commands or any local clusters for operation.  
+	Directions for the remaining tasks are given below.
+
+C. C3 configuration
+	Specific instances of C3 commands identify their compute nodes with 
+	the help of **cluster configuration files**:  files that name a set
+	of accessible clusters, and that list and describe the set of 
+	machines in each accessible cluster.  Cluster configuration files 
+	are accessed in one of two ways:
+
+	-.  explicitly:  an instance of a C3 command names a specific 
+	configuration file, using a command-line switch.
+
+	-.  implicitly:  an instance of a C3 command fails to name a specific
+	configuration file, and the command defaults to the list of cluster
+	descriptions given in /etc/c3.conf.
+	
+	When you install C3, you should create a default configuration file 
+	that is appropriate to the site.  This file, which should be named
+	/etc/c3.conf, should consist of a list of **cluster descriptor
+	blocks**:  syntactic objects that name and describe a single cluster 
+	that is accessible to that system's users.  
+
+	The following is an example of a default configuration file that 
+	contains exactly one cluster descriptor block:  a block that 
+	describes a cluster of 64 nodes:
+
+		cluster local {
+			htorc-00:node0  #head node
+			node[1-64]	#compute nodes
+		}
+
+	Cluster description blocks consist of the following basic elements:
+
+	-.  a **cluster tag**:  the word "cluster", followed by a label,
+	    which assigns a name to the cluster.  This name--here, "local"--
+	    can be supplied to C3 commands as a way of specifying the cluster
+	    on which a command should execute.
+
+	-.  an open curly brace, which signals the start of the cluster's
+	    declaration proper.
+
+	-.  a **head node descriptor**:  a line that names the interfaces
+	    on the cluster's head node.  The head node descriptor shown here
+	    has two parts:
+
+	    -.  The string to the left of the colon identifies the head 
+		node's **external** interface: a network card that links 
+		the head node to computers outside the cluster.  This string
+		can be the interface's IP address or DNS-style hostname.
+	    -.	The string to the right of the colon identifies the head 
+		node's **internal** interface: a network card that links the
+		head node to nodes inside the cluster.  This string can be 
+		the interface's IP address or DNS-style hostname.
+
+	    Here, the head node descriptor names a head node with an external
+	    interface named htorc-00, and an internal interface named node0.
+
+	    A cluster that has no external interface--i.e., a cluster that is
+	    on a closed system--can be specified by either
+
+	    -.  making the internal and external name the same, or
+	    -.  dropping the colon, and using one name in the specifier. 
+
+	-.  a list of **compute node descriptors**:  a series of individual
+	    descriptors that name the cluster's compute nodes.  
+
+	    The example given here contains exactly one compute node 
+	    descriptor.  This descriptor uses a **range qualifier** to 
+	    specify a cluster that contains 64 compute nodes, named node1, 
+	    node2, etc., up through node64.  A range qualifier consists of 
+	    -.  a first, nonnegative integer, followed by 
+	    -.  a dash, followed by 
+	    -.  a second integer that is at least as large as the first.
+
+	    In the current version of the C3 tools et, these range values are 
+	    treated as numbers, with no leading zeroes.  A declaration like
+
+		    cluster local {
+			htorc-00:node0  #head node
+			node[01-64]	#compute nodes
+		    }
+
+	    expands to the same 64 nodes as the declaration shown above.  To 
+	    specify a set of nodes with names like node01, node09, node10, ...
+	    node64, use declarations like
+
+		    cluster local {
+			htorc-00:node0  #head node
+			node0[1-9]	#compute nodes node01..node09
+			node[10-64]	#compute nodes node10..node64
+		    }
+
+ 	-.  a final, closing curly brace.
+
+ 	Configuration files that specify multiple clusters are constituted as
+	a list of cluster descriptor blocks--one per accessible cluster.
+	The following example of a cluster configuration file contains three 
+	blocks that specify configurations for clusters named local, torc, 
+	and my-cluster, respectively:
+
+		cluster local {
+			htorc-00:node0	#head node
+			node[1-64]	#compute nodes
+			exclude 2
+			exclude [55-60]
+		}
+
+		cluster torc {
+			:orc-00b
+		}
+
+		cluster my-cluster {
+			osiris:192.192.192.2
+			woody
+			dead riggs
+		}
+
+	The first cluster in the file has a special significance that is
+	analogous to the special significance accorded to the first 
+	declaration in a make file.  Any instance of a C3 command that fails
+	to name the cluster on which it should run executes, by default, on 
+	the first cluster in the configuration file.  Here, for example, any
+	command that fails to name its target cluster would default to local.
+
+	The cluster configuration file shown above illustrates three final
+	features of the cluster definition language:  **exclude qualifiers**,
+	**dead qualifiers**, and **indirect cluster** descriptors.
+
+	**Exclude qualifiers** allow nodes to be excluded from a cluster's
+	configuration: i.e., to be identified as offline for the purpose of
+	a command execution.  Exclude qualifiers may only be applied to 
+	range declarations, and must follow immediately after a range 
+	declaration to which they are being applied.  A series of exclude 
+	declarations is ended by a non-exclude declaration, or the final "}" 
+	in a cluster declaration block.  
+	
+	An exclude qualifier can be written in one of three ways:
+	-.   "exclude n", where n is the number of a node to exclude from the
+	     cluster;
+	-.   "exclude[m-n]", where m, m+1, m+2, ..., n-1, n is the range of 
+	     nodes to exclude; or as
+	-.   "exclude [m-n], which has the same effect as "exclude[m-n]".
+	Note that a string like "exclude5" is parsed as a node name, rather 
+	than as an exclude qualifier.
+
+	In the above example, the two exclude qualifiers have the effect of
+	causing node2, node55, node56 node57, node58, node59, and node60 to 
+	be treated as offline for the purpose of computation.
+
+	**Dead qualifiers** are similar to exclude qualifiers, but apply to
+	individual machines.  In the example given above, the machine named
+	"riggs" in the cluster named "my-cluster" is excluded from all
+	computations.
+
+	"Dead", like "exclude", is not a reserved word in the current version
+	of the C3 suite.  A specification block like
+
+		cluster my-cluster {
+			alive:alive
+			dead
+		}
+
+	for example, declares a two-machine cluster with a head node named 
+	"alive" and a compute node named "dead".
+
+	An **indirect cluster descriptor** is treated as a reference to 
+	another cluster, rather than as a characterization of a cluster per 
+	se.  In the example shown above, the descriptor
+
+		cluster torc {
+			:orc-00b
+		}
+
+	is an indirect cluster descriptor.  An indirect descriptor consists 
+	of
+
+	-.  a cluster tag, followed by, 
+	-.  an **indirect head head node descriptor**, followed by
+	-.  an empty list of compute node descriptors.
+
+	An indirect head node descriptor consists of an initial colon, 
+	followed by a string that names a **remote** system.  This name, 
+	which can either be an IP address or a DNS-style hostname, is checked
+	whenever a C3 command executes to verify that that the machine being
+	referenced is **not** the machine on which that command is currently 
+	executing.
+
+	A command that is destined for an indirect cluster is executed by 
+
+	-.  first forwarding that command to the remote cluster's head node
+	-.  next, executing that command, relative to the remote machine's 
+	    default configuration file.
+
+	For this feature to work properly, the remote machine must also 
+	support	a fully operational C3 suite (version 4.0) placed in the 
+	/opt/c3-4 directory.  
+
+	The indirect cluster descriptors can be used to construct **chains** 
+	of remote references:  that is, multi-node configurations where an
+	indirect cluster descriptor on a machine A references an indirect 
+	cluster descriptor on a machine B.  Here, it is the system 
+	administrator's responsibility to avoid circular references.
+
+D. Post-install
+	For the C3 ckill command to work properly, ckillnode must be copied 
+	to a directory on each compute node on every supported cluster.  The 
+	easy way to install ckillnode is to use cexec and cpush.  After 
+	installing and configuring C3 (cf. steps A-C above), use the 
+	following two commands to push ckillnode to each node in the default 
+	cluster.
+
+	cexec mkdir /opt/c3-4
+	cpush /opt/c3-4/ckillnode
+
+	For the scalable version a full C3 install is needed on each node.
+	This can be accomplished by either installing the RPM on each node
+	or pushing the tarball out and using cexec (non-scalable at this point)
+	to run the install script on each node.
+	
+This completes the installation of the C3 tools.
+
+E. Notes
+	The relative positions of nodes in c3.conf files can be significant
+	for C3 command execution.  Version 3 of the C3 suite allows the use 
+	of node ranges on the command line.  The command line parameters used
+	to specify the indices of compute nodes refer to relative node 
+	positions in c3.conf.  
+
+	Consider, for example, the semantics of node range parameters, 
+	relative to the following c3.conf file:
+
+	cluster local {
+		htorc-00:node0  #head node
+		node[1-64]	#compute nodes
+		exclude 60
+		node[129-256]
+	}
+
+	This cluster is made up of 192 nodes.  Here, 
+
+	-.  the 64 nodes named node1 through node64 correspond to slots 0-63
+	-.  the 128 nodes named node129 through node256 correspond to slots
+	    64-191--and **not**, for example, to slots 129-256.
+
+	Note also that the excluded node--node60--acts as a place holder in 
+	the range of indices: node60 is a relative index of 59, which allows
+	nodes node61, node62, node63, and node64 to correspond to 60, 61, 62,
+	and 63, respectively.  This "place holder" effect is an important 
+	reason for explicitly specifying that a node is dead or excluded--as
+	opposed to simply dropping that line from the specification.
+
+	Two new tools in version 3.1 of the C3 tools suite support the 
+	management of node numbers.  The first, cname, inputs a node name,
+	and outputs that node's relative position (slot number).  The second,
+	cnum, inputs a range of slot numbers, and outputs the names of the
+	corresponding compute nodes.
+
+
+III  C3 SUITE DOCUMENTATION
+---------------------------
+	
+C3 command documentation may be found in two locations.
+  1. Quick Usage Info - enter "<command> --help" at the command line
+  2. Full Man Page - enter "man <command>" at the command line

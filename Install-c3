@@ -1,0 +1,77 @@
+#!/bin/sh
+
+tools="cexec cexecs cget ckill ckillnode cpush crm cname cnum clist cpushimage cshutdown"
+libs="c3_file_obj.py c3_com_obj.py c3_except.py c3_sock.py"
+man1="cexec cexecs cget ckill cpush crm cname cnum clist"
+man5="c3 c3-range c3.conf c3-scale"
+man4="cpushimage cshutdown"
+docs="KNOWN_BUGS CHANGELOG README INSTALL"
+
+basedir="/opt/c3-4"
+
+if [ $# -gt 1 ]; then
+  echo "usage: $0 [-u]"
+  exit
+fi
+
+mandir=""
+if [ -d /usr/share/man ]; then
+  mandir="/usr/share/man"
+elif [ -d /usr/man ]; then
+  mandir="/usr/man"
+fi
+
+if [ $# -eq 1 ]; then
+  if [ $1 = "-u" ]; then # uninstall
+    if [ "$mandir" != "" ]; then
+      # uninstall man1 files
+      for doc in $man1; do
+        /bin/rm $mandir/man1/${doc}.1 > /dev/null 2>&1
+      done
+      # uninstall man4 files
+      for doc in $man4; do
+        /bin/rm $mandir/man4/${doc}.4 > /dev/null 2>&1
+      done
+      # uninstall man5 files
+      for doc in $man5; do
+        /bin/rm $mandir/man5/${doc}.5 > /dev/null 2>&1
+      done
+    fi
+    # uninstall executables, libs, & docs
+    /bin/rm -rf $basedir > /dev/null 2>&1
+    # uninstall profile.d files
+    /bin/rm -f /etc/profile.d/c3.sh /etc/profile.d/c3.csh
+  else
+    echo "invalid argument $1"
+  fi
+else # install
+  if [ ! -d $basedir ]; then
+    /bin/mkdir $basedir
+  fi
+  # install man files
+  if [ "$mandir" = "" ]; then
+    $mandir="${basedir}/man"
+    /bin/mkdir $mandir ${mandir}/man1 ${mandir}/man4 ${mandir}/man5
+  fi
+  for doc in $man1; do
+    /bin/cp man/man1/${doc}.1 ${mandir}/man1/ > /dev/null 2>&1
+  done
+  for doc in $man4; do
+    /bin/cp man/man4/${doc}.4 ${mandir}/man4/ > /dev/null 2>&1
+  done
+  for doc in $man5; do
+    /bin/cp man/man5/${doc}.5 ${mandir}/man5/ > /dev/null 2>&1
+  done
+  # install executables, libs, & docs
+  for tool in $tools; do
+    /bin/cp $tool $basedir/
+  done
+  for lib in $libs; do
+    /bin/cp $lib $basedir/
+  done
+  for doc in $docs; do
+    /bin/cp $doc $basedir/
+  done
+  #install profile.d files
+  /bin/cp c3.*sh /etc/profile.d/
+fi

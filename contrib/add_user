@@ -1,0 +1,52 @@
+#!/usr/bin/env python2
+
+import os, sys
+
+try:
+	user_name = sys.argv[1]
+except IndexError:
+	print "must supply a user name"
+	sys.exit()
+try:
+	user_group = sys.argv[2]
+except IndexError:
+	print "must supply a group name"
+	sys.exit()
+
+string_to_execute = "adduser -g " + user_group + " -m " + user_name
+os.system( string_to_execute )
+
+string_to_execute = "/usr/bin/passwd " + user_name
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cpush /etc/passwd"
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cpush /etc/shadow"
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cpush /etc/group"
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cpush /etc/gshadow"
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cexec mkdir /home/" + user_name
+os.system( string_to_execute )
+
+string_to_execute = "mkdir /home/" + user_name + "/.ssh"
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cexec chown -R " + user_name + ":" + user_group + " /home/" + user_name
+os.system( string_to_execute )
+
+string_to_execute = "/bin/su " + user_name + " -c \'/usr/bin/ssh-keygen -b 512 -t dsa -N \"\" -f " + os.path.expanduser( "~" + user_name ) + "/.ssh/id_dsa\'"
+os.system( string_to_execute )
+
+string_to_execute = "cp /home/" + user_name + "/.ssh/id_dsa.pub /home/" + user_name + "/.ssh/authorized_keys2"
+os.system( string_to_execute )
+
+string_to_execute = "/opt/c3-4/cexec chown -R " + user_name + ":" + user_group + " /home/" + user_name
+os.system( string_to_execute )
+
+

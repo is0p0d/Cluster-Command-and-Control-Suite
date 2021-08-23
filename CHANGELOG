@@ -1,0 +1,100 @@
+	C3 version 3.0:   Cluster Command & Control Suite
+	  Oak Ridge National Laboratory, Oak Ridge, TN,
+    Authors: M.Brim, R.Flanery, G.A.Geist, B.Luethke, S.L.Scott
+	        (C) 2001 All Rights Reserved
+
+
+Version 2.7
+
+	Changed tool names from cl_*(t) to c*(s). 
+
+Version 2.7.1
+
+	Added C3 man page (man c3). 
+	Fixed file open error message bug in cpush(s) that misreported that 
+		the node list could not be opened, when actually it was the 
+		list of files to be pushed which could not be opened. 
+
+Version 2.7.2
+
+	C3 now available as an RPM 
+	C3 is now installed in /opt to conform with the Linux Standards Base 
+		(LSB) Filesystem Hierarchy Standard (FHS) 
+	Updated cpushimage to use SystemImager v1.5.0 
+	C3_RSH environment variable should now be set to the path to the 
+		binary that C3 should use instead of the default ssh. 
+		Previously, C3_RSH was set to 1 if the user wanted to use rsh
+		instead of ssh. 
+
+Version 3.0
+
+	Total rewrite of codebase
+		using python 2.x
+		new config file format
+		new command line format
+		dropped cps
+		dropped serial versions of everthing but cexec
+
+Version 3.1
+	
+	changed "#!/usr/local/bin/python" to use "/usr/bin/env pyhton2" for 
+		portability
+	fixed bug where temporary filename stays around (see version 3.0's 
+		known bug list)
+	when using the cpush -l option if you had more than one space between
+		the source and destination cpush failed, you can now have
+		any amount and type of white space
+	when using cpush with the -l option if there is a blank line execution fails,
+		the blank line is now skipped
+	now only reads the clusters specified on the command line from the 
+		configuration file
+	addedd --all option to all the tools
+	when using the c3_com_obj.get_clusters() it changed global values instead of local
+		values, usefull if using the libraries for your own scripts
+	cname can now search multiple names in one command
+	when using a direct remote cluster and not using ssh for comminication the scripts
+		would still use ssh in one call
+	added a "contrib" section of unsupported example scripts (see README
+		in contrib directory)
+	added c3 command line parser and file parser documentation in the contrib section.
+	added the --pipe option, should make it easier to pipe cexec commands
+	changed the directory structure of the man pages
+
+Version 3.1.1
+	
+	--pipe did not handle single line output correctly, now fixed.
+	cexec now sorts stderr along with stdout
+	*^C no longer prints call stack to screen
+
+Version 3.1.2
+	
+	fixed cexec where output from a cexec command that is over the system buffer length would hang
+	when using cpush with the --head option other command line options were not 
+		executed correctly
+	fixed a problem where --blind didn't apply when using a file list
+	Specifying a cluster on the command line that doesn't exist now gives an appropriate
+		error message and tries the next cluster.
+	changed the --blind option in cpush to use "rm -f" instead of "rm -rf". This could cause entiere
+		directories to be erase (C3 doen not support directoies with cpush)
+	when using cnum with an indirect remote cluster it actually executed cname
+	added some documentation to the parsing internals for other people to use.
+	when using -f or --file with cpush it looked for the alternate configuration file on remote cluster (it
+		should have looked for /etc/c3.conf).
+	added a --all option to cnum
+
+Version 4.0
+	each cluster runs in its own thread, this allows scalable runs of C3 (see README.scalable)
+	use of supercluster groups for scalability
+	ability to run commands as an alternate user per cluster
+	ability to set a different default path to remotly find the c3 commands per user (allows the scalable
+		cluster to run entierly in user space)
+	ability to specify a different default configuration file per user. (NOT DONE!!!!!!)
+	fixed a bug where :torc: would match both the defalut cluster and torc
+		instead of being an error
+	ability to run as a different user per cluster (see c3-range(5) man page)
+	made a few error messages more descriptive
+	fixed a bug where if an index on the command line was out of range
+		execution quit, it now ignores.
+Version 4.0.1
+	Change the profiled scripts to add c3 at the end of the path, not the front
+	Renamed the install script to Install-c3

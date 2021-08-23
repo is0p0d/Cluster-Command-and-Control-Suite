@@ -1,0 +1,12 @@
+#!/bin/sh
+
+/opt/c3-4/cpush /etc/passwd  
+/opt/c3-4/cpush /etc/group
+if [ -f /etc/shadow ]; then
+  /opt/c3-4/cpush /etc/shadow 
+fi
+if [ -f /etc/gshadow ]; then
+  /opt/c3-4/cpush /etc/gshadow 
+fi
+
+exit 0
